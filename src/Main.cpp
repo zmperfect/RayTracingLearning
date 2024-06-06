@@ -17,6 +17,7 @@ int main() {
 
 	cam.aspect_ratio = 16.0 / 9.0; // 设置纵横比
 	cam.image_width  = 400; // 设置图像宽度
+	cam.samples_per_pixel = 100; // 设置每个像素的采样次数
 
 	// Render
     cam.render(world);
