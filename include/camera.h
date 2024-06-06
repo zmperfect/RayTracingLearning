@@ -10,6 +10,7 @@ public:
     double aspect_ratio   = 1.0;  // 纵横比
     int    image_width    = 100;  // 以像素为单位的图像宽度
     int samples_per_pixel = 10;   // 每个像素的采样次数
+    int max_depth         = 10;   // 递归深度
 
     void render(const hittable& world) { // 渲染图像
         initialize();
@@ -22,7 +23,7 @@ public:
                 color pixel_color(0, 0, 0); // 像素颜色初始化为黑色
                 for (int sample = 0; sample < samples_per_pixel; ++sample) { // 对每个像素进行多次采样
                     ray r = get_ray(i, j); // 获取射向点(i,j)射线
-                    pixel_color += ray_color(r, world); // 累加颜色
+                    pixel_color += ray_color(r, max_depth, world); // 累加颜色
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color); // 写入颜色（总采样的缩放）
             }  
@@ -82,10 +83,15 @@ private:
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
-    color ray_color(const ray& r, const hittable& world) const {
+    color ray_color(const ray& r, int depth, const hittable& world) const {
+        if (depth <= 0) // 如果超过光线反射的递归深度，则返回黑色
+            return color(0,0,0);
+
         hit_record rec; // 记录射线与物体的交点信息
-        if (world.hit(r, interval(0, infinity), rec)) { // 如果射线与某个物体相交，则返回该交点的颜色
-            return 0.5 * (rec.normal + color(1,1,1));
+
+        if (world.hit(r, interval(0.001, infinity), rec)) { // 如果射线与某个物体相交，则返回该交点的颜色(实现漫反射，)
+            vec3 direction = rec.normal + random_unit_vector();// 获取交点的法向量，并加上一个随机单位向量
+            return 0.1 * ray_color(ray(rec.p, direction), depth-1, world); // 返回一个颜色，它是从交点rec.p出发，沿着方向direction的射线的颜色的一半。这个操作实现了漫反射。
         }
 
         vec3 unit_direction = unit_vector(r.direction());// 获取射线的方向，并将其转换为单位向量
