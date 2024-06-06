@@ -4,20 +4,30 @@
 
 #include <iostream>
 
-bool hit_sphere(const point3& center, double radius, const ray& r) { //计算射线Ray与球体是否接触
+double hit_sphere(const point3& center, double radius, const ray& r) { //计算射线Ray与球体是否接触,返回近接触点的t值
 	// t^2d \cdot d - 2td \cdot (C-Q)+(C-Q)\cdot(C-Q)-r^2=0
 	// 圆心C，半径r，射线起点Q，射线方向d，t为未知数(射线与球体的交点)
+	// 简化 -2h=b=-2d\cdot(C-Q)
+	// \frac{-b\pm \sqrt{b^2-4ac}}{2a}=\frac{-2h\pm \sqrt{(2h)^2-4ac}}{2a}=\frac{-h\pm \sqrt{h^2-ac}}{a}
 	vec3 oc = center - r.origin(); // 计算射线起点到球心的向量
-	auto a = dot(r.direction(), r.direction());
-    auto b = -2.0 * dot(r.direction(), oc);
-    auto c = dot(oc, oc) - radius*radius;
-    auto discriminant = b*b - 4*a*c;
-    return (discriminant >= 0);
+	auto a = r.direction().length_squared(); // 计算射线方向的长度的平方
+    auto h = dot(r.direction(), oc);
+    auto c = oc.length_squared() - radius*radius;
+    auto discriminant = h*h - a*c;
+	
+	if (discriminant < 0) {
+		return -1.0; // 射线与球体不相交
+	} else {
+		return (h - sqrt(discriminant)) / a; // 返回近接触点的t值
+	}
 }
 
 color ray_color(const ray& r) {
-	if (hit_sphere(point3(0,0,-1), 0.5, r)) // 如果射线与球体相交
-		return color(1, 0, 0); // 返回红色
+	auto t = hit_sphere(point3(0,0,-1), 0.5, r); // 计算射线与球体的交点
+	if (t > 0.0) {
+		vec3 N = unit_vector(r.at(t) - vec3(0,0,-1)); // 计算交点的法向量
+		return 0.5*color(N.x()+1, N.y()+1, N.z()+1); // 返回交点的颜色
+	}
 
     vec3 unit_direction = unit_vector(r.direction());// 获取射线的方向，并将其转换为单位向量
     auto a = 0.5*(unit_direction.y() + 1.0);// 计算一个因子a，它的值在0到1之间。当射线的方向向上时（y分量为1），a的值为1；当射线的方向向下时（y分量为-1），a的值为0。
