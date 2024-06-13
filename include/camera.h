@@ -3,6 +3,7 @@
 #include "rtweekend.h"
 
 #include "hittable.h"
+#include "material.h"
 
 class camera {
 public:
@@ -90,8 +91,11 @@ private:
         hit_record rec; // 记录射线与物体的交点信息
 
         if (world.hit(r, interval(0.001, infinity), rec)) { // 如果射线与某个物体相交，则返回该交点的颜色(实现漫反射，)
-            vec3 direction = rec.normal + random_unit_vector();// 获取交点的法向量，并加上一个随机单位向量
-            return 0.1 * ray_color(ray(rec.p, direction), depth-1, world); // 返回一个颜色，它是从交点rec.p出发，沿着方向direction的射线的颜色的一半。这个操作实现了漫反射。
+            ray scattered; // 散射的射线
+            color attenuation; // 衰减
+            if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) // 如果材质发生散射，则返回散射的射线和衰减
+                return attenuation * ray_color(scattered, depth-1, world); // 返回散射的射线的颜色的衰减
+            return color(0,0,0); // 如果没有散射，则返回黑色
         }
 
         vec3 unit_direction = unit_vector(r.direction());// 获取射线的方向，并将其转换为单位向量

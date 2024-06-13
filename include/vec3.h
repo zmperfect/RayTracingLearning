@@ -34,6 +34,10 @@ public:
     vec3& operator/=(double t) { return *this *= 1/t; }
     double length() const { return sqrt(length_squared()); }
     double length_squared() const { return e[0]*e[0] + e[1]*e[1] + e[2]*e[2]; }
+    bool near_zero() const { // 判断向量是否接近0向量
+        const auto s = 1e-8;
+        return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+    }
     static vec3 random() { return vec3(random_double(), random_double(), random_double()); } // 随机生成一个vec3
     static vec3 random(double min, double max) { return vec3(random_double(min,max), random_double(min,max), random_double(min,max)); } // 随机生成一个vec3(有范围min-max)
 };
@@ -75,4 +79,8 @@ inline vec3 random_unit_vector() { return unit_vector(random_in_unit_sphere()); 
 inline vec3 random_on_hemisphere(const vec3& normal) { // 使得生成的反射光线在反射表面法相的半球内
     vec3 on_unit_sphere = random_unit_vector();
     return dot(on_unit_sphere, normal) > 0.0 ? on_unit_sphere : -on_unit_sphere; // In the same hemisphere as the normal
+}
+
+inline vec3 reflect(const vec3& v, const vec3& n) { // 反射
+    return v - 2*dot(v,n)*n; // dot(v,n)是v在n上的投影，2*dot(v,n)*n是v在n上的投影的两倍，v减去这个投影的两倍就是反射后的向量
 }

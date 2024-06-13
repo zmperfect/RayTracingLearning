@@ -4,7 +4,8 @@
 
 class sphere : public hittable {    // 球体类
 public:
-    sphere(const point3& center, double radius) : center(center), radius(fmax(0,radius)) {} // constructor(构造一个球体)
+    sphere(const point3& center, double radius, shared_ptr<material> mat_ptr)
+    : center(center), radius(fmax(0,radius)), mat_ptr(mat_ptr) {}
 
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {  //判断射线是否与球体相交
         // t^2d \cdot d - 2td \cdot (C-Q)+(C-Q)\cdot(C-Q)-r^2=0
@@ -35,6 +36,7 @@ public:
         rec.p = r.at(rec.t);
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat_ptr = mat_ptr;
 
         return true;
     }
@@ -42,4 +44,5 @@ public:
 private:
     point3 center;  // 球心坐标
     double radius;  // 半径
+    shared_ptr<material> mat_ptr; // 材质
 };
