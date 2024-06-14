@@ -11,7 +11,13 @@ public:
     double aspect_ratio   = 1.0;  // 纵横比
     int    image_width    = 100;  // 以像素为单位的图像宽度
     int samples_per_pixel = 10;   // 每个像素的采样次数
-    int max_depth         = 10;   // 递归深度
+    int max_depth         = 10;   // 递归深度(进入场景的最大射线反弹次数)
+
+    // Camera
+    double vfov = 90;                // 垂直视角（视野）
+    point3 lookfrom = point3(0,0,0); // 相机点(相机位置)
+    point3 lookat = point3(0,0,-1);  // 观察点(相机看向的位置)
+    vec3   vup = vec3(0,1,0);        // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
 
     void render(const hittable& world) { // 渲染图像
         initialize();
@@ -39,6 +45,7 @@ private:
     point3 pixel00_loc;    // 像素(0,0)的位置
     vec3   pixel_delta_u;  // 像素沿水平方向的偏移
     vec3   pixel_delta_v;  // 像素沿垂直方向的偏移
+    vec3   u, v, w;        // 相机坐标系的三个基向量(u指向右，v指向上，w指向观察点的反方向)
 
     void initialize() { // 初始化
 
@@ -48,23 +55,30 @@ private:
 
         pixel_samples_scale = 1.0 / samples_per_pixel; // 计算像素采样的缩放
 
-        center = point3(0, 0, 0); // 相机中心设置
+        center = lookfrom; // 相机中心设置
 
         // 确定视口尺寸
-        auto focal_length = 1.0; // 焦距
-        auto viewport_height = 2.0; // 视口高度
+        auto focal_length = (lookfrom - lookat).length(); // 焦距
+        auto theta = degrees_to_radians(vfov); // 视野角度(弧度)
+        auto h = tan(theta/2); // 视野角度的一半
+        auto viewport_height = 2 * h * focal_length; // 视口高度
         auto viewport_width = viewport_height * (double(image_width)/image_height); // 视口宽度
 
+        // 计算相机坐标系的三个基向量(u指向右，v指向上，w指向观察点的反方向)
+        w = unit_vector(lookfrom - lookat);
+        u = unit_vector(cross(vup, w));
+        v = cross(w, u);
+
         // 计算横向和纵向视口边缘的矢量V_u,V_v
-        auto viewport_u = vec3(viewport_width, 0, 0);
-        auto viewport_v = vec3(0, -viewport_height, 0);
+        vec3 viewport_u = viewport_width * u;  // 沿着视口水平方向的矢量
+        vec3 viewport_v = viewport_height * -v; // 沿着视口垂直方向的矢量(注意这里是-v，因为v（相机坐标系）是指向上的，而视口的垂直方向是向下的)
 
         // 计算像素间的水平和垂直三角矢量(本质是两个方向上像素的间隔)
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
         // 计算左上角像素的位置(边界像素的位置到边缘的距离仅为像素间隔的一半)
-        auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+        auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
 

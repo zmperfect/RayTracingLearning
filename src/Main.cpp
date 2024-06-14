@@ -30,7 +30,12 @@ int main() {
 	cam.aspect_ratio 		= 16.0 / 9.0; // 设置纵横比
 	cam.image_width  		= 400; // 设置图像宽度
 	cam.samples_per_pixel 	= 100; // 设置每个像素的采样次数
-	cam.max_depth         	= 50; // 设置递归深度
+	cam.max_depth         	= 50; // 设置递归深度(进入场景的最大射线反弹次数)
+
+	cam.vfov 	 = 20; // 设置垂直视角（视野）
+	cam.lookfrom = point3(-2,2,1);
+    cam.lookat   = point3(0,0,-1);
+    cam.vup      = vec3(0,1,0);
 
 	// Render
     cam.render(world);
