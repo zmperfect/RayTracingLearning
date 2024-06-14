@@ -66,6 +66,15 @@ inline vec3 cross(const vec3& u, const vec3& v) { // 叉乘
                 u.e[0] * v.e[1] - u.e[1] * v.e[0]);
 }
 inline vec3 unit_vector(const vec3& v) { return v / v.length(); } // 返回一个单位向量
+
+inline vec3 random_in_unit_disk() { // 在单位圆盘内随机生成一个点用于光圈模糊
+    while (true) {
+        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
+        if (p.length_squared() < 1)
+            return p;
+    }
+}
+
 inline vec3 random_in_unit_sphere() { // 在单位球内随机生成一个点用于漫反射, 只要点在圆内即可
     while (true) {
         auto p = vec3::random(-1,1);

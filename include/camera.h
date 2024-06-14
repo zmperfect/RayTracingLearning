@@ -19,6 +19,10 @@ public:
     point3 lookat = point3(0,0,-1);  // 观察点(相机看向的位置)
     vec3   vup = vec3(0,1,0);        // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
 
+    // 焦平面相关
+    double defocus_angle = 0; // 模糊角度，不同角度的光线通过每个像素的不同位置，从而产生不同的焦点效果
+    double focus_dist = 10; // 焦距，相机中心到焦平面的距离
+
     void render(const hittable& world) { // 渲染图像
         initialize();
 
@@ -46,6 +50,8 @@ private:
     vec3   pixel_delta_u;  // 像素沿水平方向的偏移
     vec3   pixel_delta_v;  // 像素沿垂直方向的偏移
     vec3   u, v, w;        // 相机坐标系的三个基向量(u指向右，v指向上，w指向观察点的反方向)
+    vec3 defocus_disk_u;   // 焦平面上水平方向的向量
+    vec3 defocus_disk_v;   // 焦平面上垂直方向的向量
 
     void initialize() { // 初始化
 
@@ -58,10 +64,9 @@ private:
         center = lookfrom; // 相机中心设置
 
         // 确定视口尺寸
-        auto focal_length = (lookfrom - lookat).length(); // 焦距
         auto theta = degrees_to_radians(vfov); // 视野角度(弧度)
         auto h = tan(theta/2); // 视野角度的一半
-        auto viewport_height = 2 * h * focal_length; // 视口高度
+        auto viewport_height = 2 * h * focus_dist; // 视口高度
         auto viewport_width = viewport_height * (double(image_width)/image_height); // 视口宽度
 
         // 计算相机坐标系的三个基向量(u指向右，v指向上，w指向观察点的反方向)
@@ -78,17 +83,22 @@ private:
         pixel_delta_v = viewport_v / image_height;
 
         // 计算左上角像素的位置(边界像素的位置到边缘的距离仅为像素间隔的一半)
-        auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2;
+        auto viewport_upper_left = center - (focus_dist * w) - viewport_u/2 - viewport_v/2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // 计算焦平面上的基向量
+        auto defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2)); // 计算焦平面的半径
+        defocus_disk_u = u * defocus_radius; // 焦平面上水平方向的向量
+        defocus_disk_v = v * defocus_radius; // 焦平面上垂直方向的向量
     }
 
-    ray get_ray(int i, int j) const { // 构建一条摄像机射线，射线从原点出发，指向像素位置(i,j)周围的随机采样点。
+    ray get_ray(int i, int j) const { // 构建一条摄像机光线，从散焦盘出发，指向像素位置 i、j 周围的随机采样点
         auto offset = sample_square();
         auto pixel_sample = pixel00_loc
                           + ((i + offset.x()) * pixel_delta_u)
                           + ((j + offset.y()) * pixel_delta_v);
 
-        auto ray_origin = center; // Ray的起点为相机中心
+          auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(); // 如果焦平面模糊角度为0，则光线从相机中心发出，否则从焦平面上的随机点发出
         auto ray_direction = pixel_sample - ray_origin; // Ray的方向为从相机中心指向像素位置(i,j)周围的随机采样点
 
         return ray(ray_origin, ray_direction);
@@ -96,6 +106,11 @@ private:
 
     vec3 sample_square() const { // 返回指向 [-.5,-.5]-[+.5,+.5] 单位正方形中随机点的矢量。
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    point3 defocus_disk_sample() const { // 返回焦平面上的随机点
+        auto p = random_in_unit_disk();
+        return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
     color ray_color(const ray& r, int depth, const hittable& world) const {
