@@ -19,9 +19,9 @@ public:
     point3 lookat = point3(0,0,-1);  // 观察点(相机看向的位置)
     vec3   vup = vec3(0,1,0);        // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
 
-    // 焦平面相关
-    double defocus_angle = 0; // 模糊角度，不同角度的光线通过每个像素的不同位置，从而产生不同的焦点效果
-    double focus_dist = 10; // 焦距，相机中心到焦平面的距离
+    // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    double defocus_angle = 0; // 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小） 
+    double focus_dist = 10; // 焦距，相机中心到完美焦平面（视口在完美焦平面上(其上的图像不会被模糊)）的距离
 
     void render(const hittable& world) { // 渲染图像
         initialize();
@@ -66,7 +66,7 @@ private:
         // 确定视口尺寸
         auto theta = degrees_to_radians(vfov); // 视野角度(弧度)
         auto h = tan(theta/2); // 视野角度的一半
-        auto viewport_height = 2 * h * focus_dist; // 视口高度
+        auto viewport_height = 2 * h * focus_dist; // 视口高度（此处2*h计算的是根据视野角度计算的视口高度，其与焦平面上的视口高度成等比例）
         auto viewport_width = viewport_height * (double(image_width)/image_height); // 视口宽度
 
         // 计算相机坐标系的三个基向量(u指向右，v指向上，w指向观察点的反方向)
@@ -98,7 +98,7 @@ private:
                           + ((i + offset.x()) * pixel_delta_u)
                           + ((j + offset.y()) * pixel_delta_v);
 
-          auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(); // 如果焦平面模糊角度为0，则光线从相机中心发出，否则从焦平面上的随机点发出
+        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(); // 如果焦平面模糊角度为0（即焦平面半径（光圈大小）为0），则光线从相机中心发出，否则从焦平面上的随机点发出
         auto ray_direction = pixel_sample - ray_origin; // Ray的方向为从相机中心指向像素位置(i,j)周围的随机采样点
 
         return ray(ray_origin, ray_direction);

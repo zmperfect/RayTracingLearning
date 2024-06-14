@@ -18,7 +18,7 @@ public:
     lambertian(const color& albedo) : albedo(albedo) {}
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override { //是否散射
-        auto scatter_direction = rec.normal + random_unit_vector(); //接触点的单位+法向量随机生成一个单位向量 （即散射方向）
+        auto scatter_direction = rec.normal + random_unit_vector(); //接触点的单位法向量+随机生成的单位向量生成一个散射向量 （即散射方向）
 
         if (scatter_direction.near_zero()) //如果生成的向量接近0向量
             scatter_direction = rec.normal; //则将散射方向设置为法向量
