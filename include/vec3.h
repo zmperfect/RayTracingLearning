@@ -84,3 +84,10 @@ inline vec3 random_on_hemisphere(const vec3& normal) { // 使得生成的反射�
 inline vec3 reflect(const vec3& v, const vec3& n) { // 反射
     return v - 2*dot(v,n)*n; // dot(v,n)是v在n上的投影，2*dot(v,n)*n是v在n上的投影的两倍，v减去这个投影的两倍就是反射后的向量
 }
+
+inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) { // 折射,uv是入射光线，n是法向量，etai_over_etat是折射率
+    auto cos_theta = fmin(dot(-uv, n), 1.0); // cos_theta是uv与n的夹角
+    vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n); // r_out_perp是折射光线在n上的投影
+    vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n; // r_out_parallel是折射光线在n上的垂直于n的分量
+    return r_out_perp + r_out_parallel; // 返回折射后的向量
+}

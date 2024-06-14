@@ -48,3 +48,37 @@ private:
     color albedo; // 反射率
     double fuzz; //模糊度(实际上是反射光线的扩散程度(模糊球的半径))
 };
+
+class dielectric : public material { //介质(有折射)
+public:
+    dielectric(double refraction_index) : refraction_index(refraction_index) {} 
+
+    bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override { //是否折射
+        attenuation = color(1.0, 1.0, 1.0); //透射率
+        double ri = rec.front_face ? (1.0/refraction_index) : refraction_index; //折射率（看接触面是否是入射光接触的表面，来决定是否哪个介质为入射光线所在）
+
+        vec3 unit_direction = unit_vector(r_in.direction()); //入射光线的单位向量
+        double cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0); //入射光线与法向量的点积
+        double sin_theta = sqrt(1.0 - cos_theta * cos_theta); //入射光线与法向量的点积的平方根
+
+        bool cannot_refract = ri * sin_theta > 1.0; //是否不能折射
+        vec3 direction;//方向
+
+        if (cannot_refract || reflectance(cos_theta, ri) > random_double()) //如果不能折射或反射率大于随机数
+            direction = reflect(unit_direction, rec.normal); //反射方向
+        else
+            direction = refract(unit_direction, rec.normal, ri); //折射方向
+
+        scattered = ray(rec.p, direction); // 生成一条光线
+        return true;
+    }
+
+private:
+    double refraction_index; //真空或空气中的折射率，或材料的折射率与封闭介质的折射率之比
+    static double reflectance(double cosine, double refraction_index) { // 计算反射率
+        // 使用克里斯托夫·施利克近似公式
+        auto r0 = (1 - refraction_index) / (1 + refraction_index);
+        r0 = r0*r0;
+        return r0 + (1-r0)*pow((1 - cosine),5);
+    }
+};
