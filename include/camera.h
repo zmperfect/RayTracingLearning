@@ -100,8 +100,9 @@ private:
 
         auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(); // 如果焦平面模糊角度为0（即焦平面半径（光圈大小）为0），则光线从相机中心发出，否则从焦平面上的随机点发出
         auto ray_direction = pixel_sample - ray_origin; // Ray的方向为从相机中心指向像素位置(i,j)周围的随机采样点
+        auto ray_time = random_double(); // 随机生成光线的时间
 
-        return ray(ray_origin, ray_direction);
+        return ray(ray_origin, ray_direction, ray_time);
     }
 
     vec3 sample_square() const { // 返回指向 [-.5,-.5]-[+.5,+.5] 单位正方形中随机点的矢量。
@@ -122,7 +123,7 @@ private:
         if (world.hit(r, interval(0.001, infinity), rec)) { // 如果射线与某个物体相交，则返回该交点的颜色(实现漫反射，)
             ray scattered; // 散射的射线
             color attenuation; // 衰减
-            if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) // 如果材质发生散射，则返回散射的射线和衰减
+            if (rec.mat->scatter(r, rec, attenuation, scattered)) // 如果材质发生散射，则返回散射的射线和衰减
                 return attenuation * ray_color(scattered, depth-1, world); // 返回散射的射线的颜色的衰减
             return color(0,0,0); // 如果没有散射，则返回黑色
         }

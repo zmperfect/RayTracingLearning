@@ -23,7 +23,7 @@ public:
         if (scatter_direction.near_zero()) //如果生成的向量接近0向量
             scatter_direction = rec.normal; //则将散射方向设置为法向量
 
-        scattered = ray(rec.p, scatter_direction); //生成一条射线
+        scattered = ray(rec.p, scatter_direction, r_in.time()); //生成一条射线
         attenuation = albedo; // 反射率
         return true;
     }
@@ -39,13 +39,13 @@ public:
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override { //是否散射
         vec3 reflected = reflect(r_in.direction(), rec.normal); //反射方向
         reflected += fuzz * random_in_unit_sphere(); //反射方向+模糊度(模糊球的半径) * 单位球内随机生成的点
-        scattered = ray(rec.p, reflected); //生成一条射线
-        attenuation = albedo; //反射率
+        scattered = ray(rec.p, reflected, r_in.time()); //生成一条射线
+        attenuation = albedo; //反照率
         return (dot(scattered.direction(), rec.normal) > 0); //如果反射光线与法向量的点积大于0，则返回true
     }
 
 private:
-    color albedo; // 反射率
+    color albedo; // 反照率
     double fuzz; //模糊度(实际上是反射光线的扩散程度(模糊球的半径))
 };
 
@@ -54,7 +54,7 @@ public:
     dielectric(double refraction_index) : refraction_index(refraction_index) {} 
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override { //是否折射
-        attenuation = color(1.0, 1.0, 1.0); //透射率
+        attenuation = color(1.0, 1.0, 1.0); //衰减
         double ri = rec.front_face ? (1.0/refraction_index) : refraction_index; //折射率（看接触面是否是入射光接触的表面，来决定是否哪个介质为入射光线所在）
 
         vec3 unit_direction = unit_vector(r_in.direction()); //入射光线的单位向量
@@ -69,7 +69,7 @@ public:
         else
             direction = refract(unit_direction, rec.normal, ri); //折射方向
 
-        scattered = ray(rec.p, direction); // 生成一条光线
+        scattered = ray(rec.p, direction, r_in.time()); // 生成一条光线
         return true;
     }
 

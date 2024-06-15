@@ -26,9 +26,10 @@ int main() {
 
                 if (choose_mat < 0.8) {
                     // 漫反射
-                    auto albedo = color::random() * color::random();
-                    sphere_material = make_shared<lambertian>(albedo);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    auto albedo = color::random() * color::random();	// 随机生成一个颜色
+                    sphere_material = make_shared<lambertian>(albedo);	// 创建一个漫反射材质
+                    auto center2 = center + vec3(0, random_double(0,.5), 0);	// 随机生成一个小球的中心
+                    world.add(make_shared<sphere>(center, center2, 0.2, sphere_material)); // 添加一个运动球体
                 } else if (choose_mat < 0.95) {
                     // 金属材质
                     auto albedo = color::random(0.5, 1);
@@ -58,8 +59,8 @@ int main() {
     camera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0; // 纵横比
-    cam.image_width       = 1200;	// 图像宽度
-    cam.samples_per_pixel = 500;	// 每个像素的采样次数
+    cam.image_width       = 400;	// 图像宽度
+    cam.samples_per_pixel = 100;	// 每个像素的采样次数
     cam.max_depth         = 50;		// 递归深度（进入场景的最大反弹次数）
 
 	// 相机位置

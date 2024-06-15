@@ -6,7 +6,7 @@ class hit_record {  // 记录射线与物体的交点信息
 public:
     point3 p; // 交点坐标
     vec3 normal; //法线
-    shared_ptr<material> mat_ptr; // 材质
+    shared_ptr<material> mat; // 材质
     double t; // 交点的t值 Ray的表示：P(t) = A + tb
     bool front_face; // 是否是正面
 
