@@ -21,7 +21,7 @@ public:
 
     // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
     double defocus_angle = 0; // 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小） 
-    double focus_dist = 10; // 焦距，相机中心到完美焦平面（视口在完美焦平面上(其上的图像不会被模糊)）的距离
+    double focus_dist = 10;   // 焦距，相机中心到完美焦平面（视口在完美焦平面上(其上的图像不会被模糊)）的距离
 
     void render(const hittable& world) { // 渲染图像
         initialize();
