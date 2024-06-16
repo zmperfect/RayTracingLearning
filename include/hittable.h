@@ -1,5 +1,9 @@
 #pragma once
 
+#include "rtweekend.h"
+
+#include "AABB.h"
+
 class material; // 材质
 
 class hit_record {  // 记录射线与物体的交点信息
@@ -23,4 +27,6 @@ public:
     virtual ~hittable() = default;
 
     virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0; // 判断射线是否与物体相交（相交是否有效,即含射线区间判断）
+
+    virtual aabb bounding_box() const = 0; // 返回物体的包围盒
 };

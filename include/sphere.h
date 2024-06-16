@@ -6,12 +6,22 @@ class sphere : public hittable {    // 球体类
 public:
     // 静止球体
     sphere(const point3& center, double radius, shared_ptr<material> mat)
-        : center1(center), radius(fmax(0,radius)), mat(mat), is_moving(false) {}
+        : center1(center), radius(fmax(0,radius)), mat(mat), is_moving(false)
+    {
+        auto rvec = vec3(radius, radius, radius);    // 三个坐标方向上的半径向量
+        bbox = aabb(center1 - rvec, center1 + rvec); // 计算包围盒
+    }
 
     // 运动球体
     sphere(const point3& center1, const point3& center2, double radius, shared_ptr<material> mat)
         : center1(center1), radius(fmax(0,radius)), mat(mat), is_moving(true)
-    {
+    {   
+        // 计算包围盒
+        auto rvec = vec3(radius, radius, radius);
+        aabb box1(center1 - rvec, center1 + rvec); // 计算包围盒1（t0时刻）
+        aabb box2(center2 - rvec, center2 + rvec); // 计算包围盒2（t1时刻）
+        bbox = aabb(box1, box2);
+
         center_vec = center2 - center1; // 计算球心运动方向
     }
 
@@ -50,12 +60,15 @@ public:
         return true;
     }
 
+    aabb bounding_box() const override { return bbox; } // 返回包围盒
+
 private:
     point3 center1;  // 球心坐标
     double radius;  // 半径
     shared_ptr<material> mat; // 材质
     bool is_moving; // 是否是运动球体
     vec3 center_vec; // 球心运动方向
+    aabb bbox; // 包围盒
 
     point3 sphere_center(double time) const {
         // 根据时间从中心 1 线性插值到中心 2，其中 t=0 表示中心 1，t=1 表示中心 2。

@@ -34,6 +34,10 @@ inline double random_double(double min, double max) { // 生成[min,max)之间�
     return min + (max-min)*random_double();
 }
 
+inline int random_int(int min, int max) { // 生成[min,max]之间的随机整数
+    return int(random_double(min, max+1));
+}
+
 // 常用头文件
 
 #include "color.h"
