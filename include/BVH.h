@@ -10,7 +10,9 @@
 
 class bvh_node : public hittable {
 public:
-    bvh_node(hittable_list list) : bvh_node(list.objects, 0, list.objects.size()) {
+    bvh_node(hittable_list list)
+        : bvh_node(list.objects, 0, list.objects.size())
+    {
         // 这里有一个 C++ 的微妙之处。这个构造函数（没有 span 索引）会创建一个隐式的可点击列表副本，我们将对其进行修改。复制列表的生命周期只持续到该构造函数退出为止。因为我们只需要持久化所生成的BVH。
     }
 

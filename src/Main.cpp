@@ -6,15 +6,15 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
+#include "texture.h"
 
-int main() {
+void bouncing_spheres() { // 反弹小球的场景
 	// World
 	hittable_list world; // 世界中的物体与光线相交
 
-	// 添加材质
-	auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5)); // 地面材质(郎伯反射)
-	// 添加物体
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));// 地面
+	// 添加地面
+	auto checker = make_shared<checker_texture>(0.32, color(.2, .3, .1), color(.9, .9, .9)); // 棋盘纹理（当成材质传入1）
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker))); // 添加一个地面
 
 	// 随机生成小球
 	for (int a = -11; a < 11; a++) {
@@ -78,4 +78,72 @@ int main() {
 
 	// Render
     cam.render(world);
+}
+
+void checkered_spheres() { // 场景（含两个棋盘纹理材质的球体）
+	// World
+	hittable_list world; // 世界中的物体与光线相交
+
+	// 材质、纹理
+	auto checker = make_shared<checker_texture>(0.32, color(.2, .3, .1), color(.9, .9, .9)); // 棋盘纹理（// 棋盘纹理的缩放比例，偶数纹理颜色，奇数纹理颜色）（当成材质传入物体中）
+
+	// 物体
+    world.add(make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));	// 添加一个球体（地面）
+    world.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));	// 添加一个球体（天空）
+
+	// Camera
+    camera cam;
+
+    cam.aspect_ratio      = 16.0 / 9.0;	// 纵横比
+    cam.image_width       = 400;		// 图像宽度
+    cam.samples_per_pixel = 100;		// 每个像素的采样次数
+    cam.max_depth         = 50;			// 递归深度（进入场景的最大反弹次数）
+
+	// 相机位置
+    cam.vfov     = 20;	// 垂直视角（视野）
+    cam.lookfrom = point3(13,2,3);	// 相机点(相机位置)
+    cam.lookat   = point3(0,0,0);	// 观察点(相机看向的位置)
+    cam.vup      = vec3(0,1,0);		// 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
+
+	// 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    cam.defocus_angle = 0;	// 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小），0表示无散焦
+
+	// Render
+    cam.render(world);
+}
+
+void earth() {	// 场景（地球）
+    auto earth_texture = make_shared<image_texture>("earthmap.jpg");	// 地球纹理（加载图片数据获取）
+    auto earth_surface = make_shared<lambertian>(earth_texture);		// 地球表面材质（将地球纹理数据传入地球表面介质）
+    auto globe = make_shared<sphere>(point3(0,0,0), 2, earth_surface);	// 地球（球体）
+
+	// Camera
+    camera cam;
+
+    cam.aspect_ratio      = 16.0 / 9.0;	// 纵横比
+    cam.image_width       = 400;		// 图像宽度
+    cam.samples_per_pixel = 100;		// 每个像素的采样次数
+    cam.max_depth         = 50;			// 递归深度（进入场景的最大反弹次数）
+
+	// 相机位置
+    cam.vfov     = 20;				// 垂直视角（视野）
+    cam.lookfrom = point3(0,0,12);	// 相机点(相机位置)
+    cam.lookat   = point3(0,0,0);	// 观察点(相机看向的位置)
+    cam.vup      = vec3(0,1,0);		// 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
+
+    // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    cam.defocus_angle = 0;	// 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小），0表示无散焦
+
+	// Render
+    cam.render(hittable_list(globe)); // 渲染地球
+}
+
+
+int main() {
+	switch(3) {
+		case 1: bouncing_spheres(); break;
+        case 2: checkered_spheres(); break;
+		case 3: earth(); break;
+        default: bouncing_spheres(); break;
+	}
 }

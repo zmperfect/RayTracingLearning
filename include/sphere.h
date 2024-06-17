@@ -55,13 +55,13 @@ public:
         rec.p = r.at(rec.t);
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        get_sphere_uv(outward_normal, rec.u, rec.v); // 记录交点的纹理坐标
         rec.mat = mat;
 
         return true;
     }
 
     aabb bounding_box() const override { return bbox; } // 返回包围盒
-
 private:
     point3 center1;  // 球心坐标
     double radius;  // 半径
@@ -73,5 +73,20 @@ private:
     point3 sphere_center(double time) const {
         // 根据时间从中心 1 线性插值到中心 2，其中 t=0 表示中心 1，t=1 表示中心 2。
         return center1 + time*center_vec;
+    }
+
+    static void get_sphere_uv(const point3& p, double& u, double& v) { // 获取球体的纹理坐标(其实就是计算球坐标系中的球面坐标的经纬度)
+        // p: 以原点为中心、半径为 1 的球面上的给定点。
+        // u: 返回 u 坐标 [0,1] of point on sphere.
+        // v: 返回 v 坐标 [0,1] of point on sphere.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        auto theta = acos(-p.y());
+        auto phi = atan2(-p.z(), p.x()) + pi;
+
+        u = phi / (2*pi);
+        v = theta / pi;
     }
 };

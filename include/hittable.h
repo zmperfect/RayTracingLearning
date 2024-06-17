@@ -12,6 +12,7 @@ public:
     vec3 normal; //法线
     shared_ptr<material> mat; // 材质
     double t; // 交点的t值 Ray的表示：P(t) = A + tb
+    double u, v; // 纹理坐标(u,v)
     bool front_face; // 是否是正面
 
     void set_face_normal(const ray& r, const vec3& outward_normal) { // 设置面法线

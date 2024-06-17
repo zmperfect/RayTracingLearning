@@ -2,6 +2,8 @@
 
 #include "rtweekend.h"
 
+#include "Texture.h"
+
 class hit_record; //记录射线与物体的交点信息
 
 class material { //材质
@@ -15,7 +17,8 @@ public:
 
 class lambertian : public material { //郎伯反射（漫反射）
 public:
-    lambertian(const color& albedo) : albedo(albedo) {}
+    lambertian(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
+    lambertian(shared_ptr<Texture> tex) : tex(tex) {}
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override { //是否散射
         auto scatter_direction = rec.normal + random_unit_vector(); //接触点的单位法向量+随机生成的单位向量生成一个散射向量 （即散射方向）
@@ -24,12 +27,13 @@ public:
             scatter_direction = rec.normal; //则将散射方向设置为法向量
 
         scattered = ray(rec.p, scatter_direction, r_in.time()); //生成一条射线
-        attenuation = albedo; // 反射率
+        attenuation = tex->value(rec.u, rec.v, rec.p); // 反射1个单位光线后的衰减
         return true;
     }
 
 private:
-    color albedo;// 反射率
+    shared_ptr<Texture> tex; //纹理
+    color albedo;// Albedo 参数控制着表面的基色
 };
 
 class metal : public material {
@@ -40,12 +44,12 @@ public:
         vec3 reflected = reflect(r_in.direction(), rec.normal); //反射方向
         reflected += fuzz * random_in_unit_sphere(); //反射方向+模糊度(模糊球的半径) * 单位球内随机生成的点
         scattered = ray(rec.p, reflected, r_in.time()); //生成一条射线
-        attenuation = albedo; //反照率
+        attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0); //如果反射光线与法向量的点积大于0，则返回true
     }
 
 private:
-    color albedo; // 反照率
+    color albedo; // Albedo 参数控制着表面的基色
     double fuzz; //模糊度(实际上是反射光线的扩散程度(模糊球的半径))
 };
 
