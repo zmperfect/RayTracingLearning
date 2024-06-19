@@ -138,12 +138,41 @@ void earth() {	// 场景（地球）
     cam.render(hittable_list(globe)); // 渲染地球
 }
 
+void perlin_spheres() { // 场景（柏林噪声）
+    // World
+    hittable_list world;
+
+    auto pertext = make_shared<noise_texture>(4);    // 柏林噪声纹理(缩放比例4)
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext))); // 添加一个地面（地表材质为漫反射材质，纹理为柏林噪声）
+    world.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext))); // 添加一个球体（球体材质为漫反射材质，纹理为柏林噪声）
+
+    // Camera
+    camera cam;
+
+    cam.aspect_ratio      = 16.0 / 9.0; // 纵横比
+    cam.image_width       = 400;        // 图像宽度
+    cam.samples_per_pixel = 100;        // 每个像素的采样次数
+    cam.max_depth         = 50;         // 递归深度（进入场景的最大反弹次数）
+
+    // 相机位置
+    cam.vfov     = 20;              // 垂直视角（视野）
+    cam.lookfrom = point3(13,2,3);  // 相机点(相机位置)
+    cam.lookat   = point3(0,0,0);   // 观察点(相机看向的位置)
+    cam.vup      = vec3(0,1,0);     // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
+
+    // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    cam.defocus_angle = 0;  // 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小）
+
+    // Render
+    cam.render(world);
+}
 
 int main() {
-	switch(3) {
+	switch(4) {
 		case 1: bouncing_spheres(); break;
         case 2: checkered_spheres(); break;
 		case 3: earth(); break;
+        case 4: perlin_spheres(); break;
         default: bouncing_spheres(); break;
 	}
 }

@@ -2,6 +2,7 @@
 
 #include "rtweekend.h"
 
+#include "perlin.h"
 #include "rtw_stb_image.h"
 
 class Texture { // 纹理
@@ -77,4 +78,19 @@ public:
     }
 private:
     rtw_image image; // 图像
+};
+
+class noise_texture : public Texture { // 噪声纹理
+public:
+    noise_texture() {}
+
+    noise_texture(double scale = 1) : scale(scale) {}
+
+    color value(double u, double v, const point3& p) const override {
+        // 返回噪声纹理的颜色
+        return color(0.5, 0.5, 0.5) * (1 + sin(scale * p.z() + 10 * noise.turb(p, 7))); // 进行扰动，同时调整频率
+    }
+private:
+    perlin noise; // 柏林噪声
+    double scale; // 噪声纹理的缩放比例
 };
