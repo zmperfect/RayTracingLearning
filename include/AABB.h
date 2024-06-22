@@ -9,7 +9,10 @@ public:
     aabb() {} // 默认AABB为空，即没有间隔
 
     aabb(const interval& x, const interval& y, const interval& z)
-        : x(x), y(y), z(z) {}
+        : x(x), y(y), z(z)
+        {
+            pad_to_minimums(); // 边界框填充以避免某个轴的宽度为零
+        }
 
     aabb(const point3& a, const point3& b) {
         // 将 a 和 b 两点视为边界框的极值，因此我们不需要特定的最小/最大坐标顺序。
@@ -22,6 +25,8 @@ public:
         x = interval(box0.x, box1.x);
         y = interval(box0.y, box1.y);
         z = interval(box0.z, box1.z);
+
+        pad_to_minimums(); // pad to minimum
     }
 
     const interval& axis_interval(int n) const { // 返回第n个坐标轴的区间
@@ -60,6 +65,16 @@ public:
     }
 
     static const aabb empty, universe; // 空AABB和全AABB
+
+private:
+    void pad_to_minimums() {
+        // 调整 AABB，使任何一边都不比某个`delta`小，必要时进行填充。
+
+        double delta = 0.0001;
+        if (x.size() < delta) x = x.expand(delta);
+        if (y.size() < delta) y = y.expand(delta);
+        if (z.size() < delta) z = z.expand(delta);
+    }
 };
 
 const aabb aabb::empty    = aabb(interval::empty,    interval::empty,    interval::empty);    // 空AABB

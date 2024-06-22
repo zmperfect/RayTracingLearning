@@ -37,7 +37,7 @@ public:
                     pixel_color += ray_color(r, max_depth, world); // 累加颜色
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color); // 写入颜色（总采样的缩放）
-            }  
+            }
         }
         std::clog << "\rDone.                 \n";// 输出完成
     }

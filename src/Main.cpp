@@ -5,6 +5,7 @@
 #include "hittable.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "Quad.h"
 #include "sphere.h"
 #include "texture.h"
 
@@ -167,12 +168,53 @@ void perlin_spheres() { // 场景（柏林噪声）
     cam.render(world);
 }
 
+void quads() {  // 场景（四边形）
+    // World
+    hittable_list world;
+
+    // 材质
+    auto left_red     = make_shared<lambertian>(color(1.0, 0.2, 0.2));
+    auto back_green   = make_shared<lambertian>(color(0.2, 1.0, 0.2));
+    auto right_blue   = make_shared<lambertian>(color(0.2, 0.2, 1.0));
+    auto upper_orange = make_shared<lambertian>(color(1.0, 0.5, 0.0));
+    auto lower_teal   = make_shared<lambertian>(color(0.2, 0.8, 0.8));
+
+    //物体（此处为四边形）
+    world.add(make_shared<quad>(point3(-3,-2, 5), vec3(0, 0,-4), vec3(0, 4, 0), left_red));
+    world.add(make_shared<quad>(point3(-2,-2, 0), vec3(4, 0, 0), vec3(0, 4, 0), back_green));
+    world.add(make_shared<quad>(point3( 3,-2, 1), vec3(0, 0, 4), vec3(0, 4, 0), right_blue));
+    world.add(make_shared<quad>(point3(-2, 3, 1), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange));
+    world.add(make_shared<quad>(point3(-2,-3, 5), vec3(4, 0, 0), vec3(0, 0,-4), lower_teal));
+
+    // Camera
+    camera cam;
+
+    // Image
+    cam.aspect_ratio      = 1.0; // 纵横比
+    cam.image_width       = 400; // 图像宽度
+    cam.samples_per_pixel = 100; // 每个像素的采样次数
+    cam.max_depth         = 50;  // 递归深度（进入场景的最大反弹次数）
+
+    // 相机位置
+    cam.vfov     = 80;              // 垂直视角（视野）
+    cam.lookfrom = point3(0,0,9);   // 相机点(相机位置)
+    cam.lookat   = point3(0,0,0);   // 观察点(相机看向的位置)
+    cam.vup      = vec3(0,1,0);     // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
+
+    // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    cam.defocus_angle = 0;  // 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小）
+
+    // Render
+    cam.render(world);
+}
+
 int main() {
-	switch(4) {
-		case 1: bouncing_spheres(); break;
-        case 2: checkered_spheres(); break;
-		case 3: earth(); break;
-        case 4: perlin_spheres(); break;
-        default: bouncing_spheres(); break;
+	switch(5) {
+		case 1: bouncing_spheres();     break;
+        case 2: checkered_spheres();    break;
+		case 3: earth();                break;
+        case 4: perlin_spheres();       break;
+        case 5: quads();                break;
+        // default: bouncing_spheres();    break;
 	}
 }

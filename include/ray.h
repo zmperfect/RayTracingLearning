@@ -16,7 +16,7 @@ public:
 
     double time() const { return tm; } // 返回光线所在的时间
 
-    point3 at(double t) const { // Ray的表示：P(t) = A + tb
+    point3 at(double t) const { // Ray的表示：P(t) = A + tb，A是Ray的起点，b是Ray的方向，t是参数
         return orig + t*dir;
     }
 
