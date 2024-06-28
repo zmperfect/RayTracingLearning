@@ -66,6 +66,7 @@ void bouncing_spheres() { // 反弹小球的场景
     cam.image_width       = 400;	// 图像宽度
     cam.samples_per_pixel = 100;	// 每个像素的采样次数
     cam.max_depth         = 50;		// 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0.70, 0.80, 1.00); // 背景颜色
 
 	// 相机位置
     cam.vfov     = 20;				// 垂直视角（视野）
@@ -99,6 +100,7 @@ void checkered_spheres() { // 场景（含两个棋盘纹理材质的球体）
     cam.image_width       = 400;		// 图像宽度
     cam.samples_per_pixel = 100;		// 每个像素的采样次数
     cam.max_depth         = 50;			// 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0.70, 0.80, 1.00); // 背景颜色
 
 	// 相机位置
     cam.vfov     = 20;	// 垂直视角（视野）
@@ -125,6 +127,7 @@ void earth() {	// 场景（地球）
     cam.image_width       = 400;		// 图像宽度
     cam.samples_per_pixel = 100;		// 每个像素的采样次数
     cam.max_depth         = 50;			// 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0.70, 0.80, 1.00); // 背景颜色
 
 	// 相机位置
     cam.vfov     = 20;				// 垂直视角（视野）
@@ -154,6 +157,7 @@ void perlin_spheres() { // 场景（柏林噪声）
     cam.image_width       = 400;        // 图像宽度
     cam.samples_per_pixel = 100;        // 每个像素的采样次数
     cam.max_depth         = 50;         // 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0.70, 0.80, 1.00); // 背景颜色
 
     // 相机位置
     cam.vfov     = 20;              // 垂直视角（视野）
@@ -194,6 +198,7 @@ void quads() {  // 场景（四边形）
     cam.image_width       = 400; // 图像宽度
     cam.samples_per_pixel = 100; // 每个像素的采样次数
     cam.max_depth         = 50;  // 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0.70, 0.80, 1.00); // 背景颜色
 
     // 相机位置
     cam.vfov     = 80;              // 垂直视角（视野）
@@ -208,13 +213,90 @@ void quads() {  // 场景（四边形）
     cam.render(world);
 }
 
+void simple_light() {
+    // World
+    hittable_list world;
+
+    // 添加两个球体（添加噪声纹理的漫反射材质）
+    auto pertext = make_shared<noise_texture>(4);
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    world.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+
+    // 光源
+    auto difflight = make_shared<diffuse_light>(color(4,4,4));
+    world.add(make_shared<sphere>(point3(0,7,0), 2, difflight));
+    world.add(make_shared<quad>(point3(3,1,-2), vec3(2,0,0), vec3(0,2,0), difflight));
+
+    // Camera
+    camera cam;
+
+    // Image
+    cam.aspect_ratio      = 16.0 / 9.0; // 纵横比
+    cam.image_width       = 400;        // 图像宽度
+    cam.samples_per_pixel = 100;        // 每个像素的采样次数
+    cam.max_depth         = 50;         // 递归深度（进入场景的最大反弹次数）
+    cam.background        = color(0,0,0);// 背景颜色
+
+    // 相机位置
+    cam.vfov     = 20;              // 垂直视角（视野）
+    cam.lookfrom = point3(26,3,6);  // 相机点(相机位置)
+    cam.lookat   = point3(0,2,0);   // 观察点(相机看向的位置)
+    cam.vup      = vec3(0,1,0);     // 相机的上方向(这样相机可以绕lookfrom-lookat的轴向旋转)
+
+    // 焦平面相关（可计算光圈大小）defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2))
+    cam.defocus_angle = 0;  // 圆锥体的角度，其顶点位于视口中心，底部（散焦盘）位于相机中心，可以用来换算焦平面的半径（即光圈大小）
+
+    // Render
+    cam.render(world);
+}
+
+void cornell_box() {
+    // World
+    hittable_list world;
+
+    // 材质
+    auto red   = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15)); // 漫反射光源
+
+    // 物体
+    world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green)); // 左墙
+    world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));   // 右墙
+    world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light)); // 光源
+    world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));   // 地面
+    world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));   // 顶部
+    world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // 背墙
+
+    // Camera
+    camera cam;
+
+    cam.aspect_ratio      = 1.0;
+    cam.image_width       = 600;
+    cam.samples_per_pixel = 200;
+    cam.max_depth         = 50;
+    cam.background        = color(0,0,0);
+
+    cam.vfov     = 40;
+    cam.lookfrom = point3(278, 278, -800);
+    cam.lookat   = point3(278, 278, 0);
+    cam.vup      = vec3(0,1,0);
+
+    cam.defocus_angle = 0;
+
+    // Render
+    cam.render(world);
+}
+
 int main() {
-	switch(5) {
+	switch(7) {
 		case 1: bouncing_spheres();     break;
         case 2: checkered_spheres();    break;
 		case 3: earth();                break;
         case 4: perlin_spheres();       break;
         case 5: quads();                break;
+        case 6: simple_light();         break;
+        case 7: cornell_box();          break;
         // default: bouncing_spheres();    break;
 	}
 }

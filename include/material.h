@@ -10,6 +10,10 @@ class material { //材质
 public:
     virtual ~material() = default;
 
+    virtual color emitted(double u, double v, const point3& p) const { //为了不需要让所有非发光材料都实现emitted()，我让基类返回黑色：
+        return color(0, 0, 0);
+    }
+
     virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const { //是否散射
         return false;
     }
@@ -85,4 +89,17 @@ private:
         r0 = r0*r0;
         return r0 + (1-r0)*pow((1 - cosine),5);
     }
+};
+
+class diffuse_light : public material { //漫反射光源
+public:
+    diffuse_light(shared_ptr<Texture> tex) : tex(tex) {}
+    diffuse_light(const color& emit) : tex(make_shared<solid_color>(emit)) {} // 光源的颜色
+
+    color emitted(double u, double v, const point3& p) const override { //根据纹理坐标和交点位置返回光源的颜色
+        return tex->value(u, v, p);
+    }
+
+private:
+    shared_ptr<Texture> tex; //纹理
 };

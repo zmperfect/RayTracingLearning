@@ -17,6 +17,7 @@ public:
     int max_depth         = 10;   // 递归深度(进入场景的最大射线反弹次数)
     int channels = 3; // 每个像素的通道数，对于RGB图像是3
     unsigned char* data = nullptr;  // 图像数据
+    color background;               // 场景背景颜色
 
     // Camera
     double vfov = 90;                // 垂直视角（视野）
@@ -133,16 +134,20 @@ private:
 
         hit_record rec; // 记录射线与物体的交点信息
 
-        if (world.hit(r, interval(0.001, infinity), rec)) { // 如果射线与某个物体相交，则返回该交点的颜色(实现漫反射，)
-            ray scattered; // 散射的射线
-            color attenuation; // 衰减
-            if (rec.mat->scatter(r, rec, attenuation, scattered)) // 如果材质发生散射，则返回散射的射线和衰减
-                return attenuation * ray_color(scattered, depth-1, world); // 返回散射的射线的颜色的衰减
-            return color(0,0,0); // 如果没有散射，则返回黑色
-        }
+        // 如果ray没有与任何物体相交，则返回背景颜色
+        if (!world.hit(r, interval(0.001, infinity), rec))
+            return background;
 
-        vec3 unit_direction = unit_vector(r.direction());// 获取射线的方向，并将其转换为单位向量
-        auto a = 0.5*(unit_direction.y() + 1.0);// 计算一个因子a，它的值在0到1之间。当射线的方向向上时（y分量为1），a的值为1；当射线的方向向下时（y分量为-1），a的值为0。
-        return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);// 返回一个颜色，它是白色（1.0, 1.0, 1.0）和蓝色（0.5, 0.7, 1.0）的线性插值。当a为0时，返回白色；当a为1时，返回蓝色。当a在0和1之间时，返回两种颜色的混合。
+        ray scattered; // 散射的射线
+        color attenuation; // 衰减
+        color color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p); // 获取发射的颜色
+
+        // 如果材质发生散射，则返回散射的射线和衰减
+        if (!rec.mat->scatter(r, rec, attenuation, scattered))
+            return color_from_emission;
+
+        color color_from_scatter = attenuation * ray_color(scattered, depth-1, world); 
+
+        return color_from_emission + color_from_scatter;
     }
 };
