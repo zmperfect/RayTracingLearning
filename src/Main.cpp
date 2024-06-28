@@ -209,7 +209,7 @@ void quads() {  // 场景（四边形）
 }
 
 int main() {
-	switch(5) {
+	switch(3) {
 		case 1: bouncing_spheres();     break;
         case 2: checkered_spheres();    break;
 		case 3: earth();                break;

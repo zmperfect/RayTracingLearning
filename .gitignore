@@ -9,5 +9,6 @@ build/
 *.vcxproj.filters
 *.sln
 *.ppm
+*png
 
 # Exclude
