@@ -1,5 +1,8 @@
 #pragma once
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image/stb_image_write.h"
+
 #include "rtweekend.h"
 
 #include "hittable.h"
@@ -12,6 +15,8 @@ public:
     int    image_width    = 100;  // 以像素为单位的图像宽度
     int samples_per_pixel = 10;   // 每个像素的采样次数
     int max_depth         = 10;   // 递归深度(进入场景的最大射线反弹次数)
+    int channels = 3; // 每个像素的通道数，对于RGB图像是3
+    unsigned char* data = nullptr;  // 图像数据
 
     // Camera
     double vfov = 90;                // 垂直视角（视野）
@@ -26,7 +31,8 @@ public:
     void render(const hittable& world) { // 渲染图像
         initialize();
 
-        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        data = new unsigned char[image_width * image_height * channels]; // 创建图像数据缓冲区
+        std::cout << "Parameters\n" << image_width << ' ' << image_height << ' ' << channels << "\n255\n";
 
         for (int j = 0; j < image_height; j++) {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;// 输出剩余扫描线
@@ -36,10 +42,17 @@ public:
                     ray r = get_ray(i, j); // 获取射向点(i,j)射线
                     pixel_color += ray_color(r, max_depth, world); // 累加颜色
                 }
-                write_color(std::cout, pixel_samples_scale * pixel_color); // 写入颜色（总采样的缩放）
+                int pixelIndex = (j * image_width + i) * channels; // 获取当前待写入像素索引
+                write_color(pixelIndex, data, pixel_samples_scale * pixel_color); // 写入颜色（总采样的缩放）
             }
         }
         std::clog << "\rDone.                 \n";// 输出完成
+
+        // 使用stbi_write_png将图像数据写入文件
+        stbi_write_png("..//output//output.png", image_width, image_height, channels, data, image_width * channels);
+
+        // 清理资源
+        delete[] data;
     }
 
 private:

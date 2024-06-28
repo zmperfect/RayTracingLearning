@@ -12,7 +12,7 @@ inline double linear_to_gamma(double linear_component) { // 线性颜色转伽�
     return 0;
 }
 
-void write_color(std::ostream& out, const color& pixel_color) { // 写入每个坐标的颜色
+void write_color(int pixelIndex, unsigned char* data , const color& pixel_color) { // 写入每个坐标的颜色
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
@@ -28,6 +28,8 @@ void write_color(std::ostream& out, const color& pixel_color) { // 写入每个�
     int gbyte = static_cast<int>(255.999 * intensity.clamp(g));  
     int bbyte = static_cast<int>(255.999 * intensity.clamp(b));
 
-    // Write out the pixel color components.
-    out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
+    // 写入像素颜色分量。
+    data[pixelIndex] = rbyte % 256; // R
+    data[pixelIndex + 1] = gbyte % 256; // G
+    data[pixelIndex + 2] = bbyte % 256; // B
 }
