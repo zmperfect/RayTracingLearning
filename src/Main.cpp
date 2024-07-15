@@ -250,7 +250,7 @@ void simple_light() {
     cam.render(world);
 }
 
-void cornell_box() {
+void cornell_box() { // 康奈尔盒子场景
     // World
     hittable_list world;
 
@@ -260,13 +260,17 @@ void cornell_box() {
     auto green = make_shared<lambertian>(color(.12, .45, .15));
     auto light = make_shared<diffuse_light>(color(15, 15, 15)); // 漫反射光源
 
-    // 物体
+    // 物体，坐标轴为右手坐标系
     world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green)); // 左墙
     world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));   // 右墙
     world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light)); // 光源
     world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));   // 地面
     world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));   // 顶部
     world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // 背墙
+
+    // 康奈尔盒子
+    world.add(box(point3(130, 0, 65), point3(295, 165, 230), white));
+    world.add(box(point3(265, 0, 295), point3(430, 330, 460), white));
 
     // Camera
     camera cam;
