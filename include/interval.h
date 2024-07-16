@@ -25,5 +25,13 @@ public:
     static const interval empty, universe; // 空区间和全区间
 };
 
-const interval interval::empty    = interval(+infinity, -infinity);
-const interval interval::universe = interval(-infinity, +infinity);
+const interval interval::empty    = interval(+infinity, -infinity); // 空区间
+const interval interval::universe = interval(-infinity, +infinity); // 全区间
+
+interval operator+(const interval& ival, double displacement) { // 重载+操作符，使区间可以加上一个偏移量
+    return interval(ival.min + displacement, ival.max + displacement);
+}
+
+interval operator+(double displacement, const interval& ival) { // 重载+操作符，使区间可以加上一个偏移量
+    return ival + displacement;
+}

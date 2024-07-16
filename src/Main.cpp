@@ -269,8 +269,16 @@ void cornell_box() { // 康奈尔盒子场景
     world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // 背墙
 
     // 康奈尔盒子
-    world.add(box(point3(130, 0, 65), point3(295, 165, 230), white));
-    world.add(box(point3(265, 0, 295), point3(430, 330, 460), white));
+    // 盒子1，左，旋转，平移
+    shared_ptr<hittable> box1 = box(point3(0,0,0), point3(165,330,165), white);
+    box1 = make_shared<rotate_y>(box1, 15);
+    box1 = make_shared<translate>(box1, vec3(265,0,295));
+    world.add(box1);
+    // 盒子2，右，旋转，平移
+    shared_ptr<hittable> box2 = box(point3(0,0,0), point3(165,165,165), white);
+    box2 = make_shared<rotate_y>(box2, -18);
+    box2 = make_shared<translate>(box2, vec3(130,0,65));
+    world.add(box2);
 
     // Camera
     camera cam;

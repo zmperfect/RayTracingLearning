@@ -79,3 +79,11 @@ private:
 
 const aabb aabb::empty    = aabb(interval::empty,    interval::empty,    interval::empty);    // 空AABB
 const aabb aabb::universe = aabb(interval::universe, interval::universe, interval::universe); // 全AABB
+
+aabb operator+(const aabb& bbox, const vec3& offset) {  //重载+操作符，使AABB可以加上一个偏移量
+    return aabb(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
+}
+
+aabb operator+(const vec3& offset, const aabb& bbox) {  //重载+操作符，使AABB可以加上一个偏移量
+    return bbox + offset;
+}
