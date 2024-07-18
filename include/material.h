@@ -103,3 +103,18 @@ public:
 private:
     shared_ptr<Texture> tex; //纹理
 };
+
+class isotropic : public material { //各向同性 (各向同性的散射函数选择一个均匀的随机方向：)
+public:
+    isotropic(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
+    isotropic(shared_ptr<Texture> tex) : tex(tex) {}
+
+    bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
+        scattered = ray(rec.p, random_unit_vector(), r_in.time());  //生成一条射线
+        attenuation = tex->value(rec.u, rec.v, rec.p);  // 反射1个单位光线后的衰减
+        return true;    //返回true
+    }
+
+private:
+    shared_ptr<Texture> tex;
+};
