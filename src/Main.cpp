@@ -264,10 +264,12 @@ void cornell_box() { // 康奈尔盒子场景
     // 物体，坐标轴为右手坐标系
     world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green)); // 左墙
     world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));   // 右墙
-    world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light)); // 光源
     world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));   // 地面
     world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));   // 顶部
     world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // 背墙
+
+    // Light
+    world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light)); // 光源
 
     // 康奈尔盒子
     // 盒子1，左，旋转，平移
@@ -440,7 +442,7 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {   // �
 }
 
 int main() {
-	switch(9) {
+	switch(7) {
 		case 1: bouncing_spheres();     break;
         case 2: checkered_spheres();    break;
 		case 3: earth();                break;

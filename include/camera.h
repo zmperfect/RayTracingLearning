@@ -39,9 +39,18 @@ public:
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;// 输出剩余扫描线
             for (int i = 0; i < image_width; ++i) {
                 color pixel_color(0, 0, 0); // 像素颜色初始化为黑色
-                for (int sample = 0; sample < samples_per_pixel; ++sample) { // 对每个像素进行多次采样
-                    ray r = get_ray(i, j); // 获取射向点(i,j)射线
-                    pixel_color += ray_color(r, max_depth, world); // 累加颜色
+                // for (int sample = 0; sample < samples_per_pixel; ++sample) { // 对每个像素进行多次采样
+                //     ray r = get_ray(i, j); // 获取射向点(i,j)射线
+                //     pixel_color += ray_color(r, max_depth, world); // 累加颜色
+                // }
+                // int pixelIndex = (j * image_width + i) * channels; // 获取当前待写入像素索引
+
+                // 改用分层采样
+                for (int s_j = 0; s_j < sqrt_spp; s_j++) {
+                    for (int s_i = 0; s_i < sqrt_spp; s_i++) {
+                        ray r = get_ray(i, j, s_i, s_j);
+                        pixel_color += ray_color(r, max_depth, world);
+                    }
                 }
                 int pixelIndex = (j * image_width + i) * channels; // 获取当前待写入像素索引
                 write_color(pixelIndex, data, pixel_samples_scale * pixel_color); // 写入颜色（总采样的缩放）
@@ -59,6 +68,8 @@ public:
 private:
     int    image_height;   // 以像素为单位的图像高度
     double pixel_samples_scale; // 像素采样的缩放
+    int sqrt_spp;          // 每个像素样本数的平方根
+    double recip_sqrt_spp; // 1/sqrt_spp
     point3 center;         // 相机中心
     point3 pixel00_loc;    // 像素(0,0)的位置
     vec3   pixel_delta_u;  // 像素沿水平方向的偏移
@@ -73,7 +84,11 @@ private:
         image_height = int(image_width / aspect_ratio); // 计算图像高度且其至少为1
         image_height = (image_height < 1) ? 1 : image_height;
 
-        pixel_samples_scale = 1.0 / samples_per_pixel; // 计算像素采样的缩放
+        // pixel_samples_scale = 1.0 / samples_per_pixel; // 计算像素采样的缩放
+
+        sqrt_spp = int(std::sqrt(samples_per_pixel));// 计算每个像素的采样次数的平方根
+        pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp);
+        recip_sqrt_spp = 1.0 / sqrt_spp;
 
         center = lookfrom; // 相机中心设置
 
@@ -106,8 +121,9 @@ private:
         defocus_disk_v = v * defocus_radius; // 焦平面上垂直方向的向量
     }
 
-    ray get_ray(int i, int j) const { // 构建一条摄像机光线，从散焦盘出发，指向像素位置 i、j 周围的随机采样点
-        auto offset = sample_square();
+    ray get_ray(int i, int j, int s_i, int s_j) const { // 构建一条从散焦圆盘出发并指向像素位置i，j周围随机采样点的相机光线，用于分层采样方格s_i，s_j。
+        // auto offset = sample_square();
+        auto offset = sample_square_stratified(s_i, s_j);
         auto pixel_sample = pixel00_loc
                           + ((i + offset.x()) * pixel_delta_u)
                           + ((j + offset.y()) * pixel_delta_v);
@@ -117,6 +133,15 @@ private:
         auto ray_time = random_double(); // 随机生成光线的时间
 
         return ray(ray_origin, ray_direction, ray_time);
+    }
+
+    vec3 sample_square_stratified(int s_i, int s_j) const {
+        // 返回一个向量，指向由网格索引s_i和s_j指定的正方形子像素内的随机点，对于理想化的单位正方形像素[-.5,-.5]到[+.5,+.5]。
+
+        auto px = ((s_i + random_double()) * recip_sqrt_spp) - 0.5;
+        auto py = ((s_j + random_double()) * recip_sqrt_spp) - 0.5;
+
+        return vec3(px, py, 0);
     }
 
     vec3 sample_square() const { // 返回指向 [-.5,-.5]-[+.5,+.5] 单位正方形中随机点的矢量。

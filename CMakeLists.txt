@@ -8,5 +8,6 @@ include_directories(external)
 
 # Add all the source files in the src directory
 file(GLOB SOURCES "src/*.cpp")
+# set(SOURCES src/pi.cpp)
 
 add_executable(inOneWeek ${SOURCES})
